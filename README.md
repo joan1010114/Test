@@ -21,6 +21,15 @@ pip install -r requirements.txt
 
 ## 使用方式
 
+### 方式 0：網頁介面（推薦）
+
+```bash
+export ANTHROPIC_API_KEY=sk-ant-...   # 可選，沒設定會用模板文案
+python3 web.py
+```
+
+在瀏覽器打開 <http://localhost:5000>，填寫表單、上傳商品圖，即可即時預覽並下載 PNG。
+
 ### 方式 1：以 JSON 檔傳入商品資料
 
 ```bash
@@ -79,8 +88,11 @@ python3 ecom_gen.py --product-json examples/sample_product.json --no-ai -o out.p
 ```
 .
 ├── ecom_gen.py              # CLI 進入點
+├── web.py                   # Flask 網頁介面
 ├── copywriter.py            # Claude API 文案生成
 ├── composer.py              # PIL 圖片合成（版型、主題）
+├── templates/index.html     # 網頁表單
+├── static/style.css         # 網頁樣式
 ├── requirements.txt
 └── examples/
     ├── sample_product.json

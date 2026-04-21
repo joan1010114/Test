@@ -5,3 +5,5 @@ __pycache__/
 output.png
 banner.png
 examples/out_*.png
+uploads/
+outputs/

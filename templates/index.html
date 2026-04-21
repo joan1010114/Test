@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>電商圖文產生器</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>電商圖文產生器</h1>
+    <p class="subtitle">填寫商品資訊，一鍵產生促銷圖</p>
+    {% if not has_api_key %}
+      <p class="notice">尚未設定 <code>ANTHROPIC_API_KEY</code>，將使用模板文案。</p>
+    {% endif %}
+  </header>
+
+  <div class="layout">
+    <form id="gen-form" class="form-panel" enctype="multipart/form-data">
+      <label>
+        <span>商品名稱 *</span>
+        <input type="text" name="name" required placeholder="例：極簡無線降噪耳機 Pro">
+      </label>
+
+      <div class="row">
+        <label>
+          <span>原價 (NT$)</span>
+          <input type="number" name="price" step="1" placeholder="4990">
+        </label>
+        <label>
+          <span>折扣價 (NT$)</span>
+          <input type="number" name="discount_price" step="1" placeholder="3690">
+        </label>
+      </div>
+
+      <label>
+        <span>賣點（每行一個，建議 3 項）</span>
+        <textarea name="features" rows="4" placeholder="40小時超長續航&#10;主動降噪 -42dB&#10;Hi-Res 無損音質"></textarea>
+      </label>
+
+      <label>
+        <span>自訂標語（選填，留空由 AI 產生）</span>
+        <input type="text" name="tagline" placeholder="例：沈浸音樂，與世界靜靜獨處">
+      </label>
+
+      <label>
+        <span>商品圖（建議透明背景 PNG）</span>
+        <input type="file" name="image" accept="image/*">
+      </label>
+
+      <div class="row">
+        <label>
+          <span>版型</span>
+          <select name="layout">
+            {% for l in layouts %}<option value="{{ l }}">{{ l }}</option>{% endfor %}
+          </select>
+        </label>
+        <label>
+          <span>配色主題</span>
+          <select name="theme">
+            {% for t in themes %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+          </select>
+        </label>
+      </div>
+
+      <label class="checkbox">
+        <input type="checkbox" name="use_ai" {% if has_api_key %}checked{% endif %}>
+        <span>使用 Claude AI 自動生成文案</span>
+      </label>
+
+      <button type="submit" id="submit-btn">產生促銷圖</button>
+    </form>
+
+    <div class="preview-panel">
+      <div id="preview-empty" class="preview-empty">
+        <p>尚未產生<br>填完左側表單後點擊產生</p>
+      </div>
+      <div id="preview-loading" class="preview-loading hidden">
+        <div class="spinner"></div>
+        <p>產生中…</p>
+      </div>
+      <div id="preview-result" class="preview-result hidden">
+        <img id="preview-image" alt="預覽">
+        <div class="copy-box">
+          <h3>AI 產生文案</h3>
+          <dl id="copy-display"></dl>
+        </div>
+        <a id="download-link" class="download-btn" download>下載 PNG</a>
+      </div>
+      <div id="preview-error" class="preview-error hidden"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const form = document.getElementById('gen-form');
+const empty = document.getElementById('preview-empty');
+const loading = document.getElementById('preview-loading');
+const result = document.getElementById('preview-result');
+const error = document.getElementById('preview-error');
+const img = document.getElementById('preview-image');
+const copyDisplay = document.getElementById('copy-display');
+const downloadLink = document.getElementById('download-link');
+const submitBtn = document.getElementById('submit-btn');
+
+function show(el) {
+  [empty, loading, result, error].forEach(e => e.classList.add('hidden'));
+  el.classList.remove('hidden');
+}
+
+function renderCopy(copy) {
+  copyDisplay.innerHTML = '';
+  const rows = [
+    ['標語', copy.tagline],
+    ['亮點', (copy.highlights || []).join('、')],
+    ['CTA', copy.cta],
+    ['徽章', copy.badge || '（無）'],
+  ];
+  for (const [k, v] of rows) {
+    const dt = document.createElement('dt'); dt.textContent = k;
+    const dd = document.createElement('dd'); dd.textContent = v || '';
+    copyDisplay.appendChild(dt); copyDisplay.appendChild(dd);
+  }
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  show(loading);
+  submitBtn.disabled = true;
+  try {
+    const data = new FormData(form);
+    const res = await fetch('/generate', { method: 'POST', body: data });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: '產生失敗' }));
+      throw new Error(err.error || '產生失敗');
+    }
+    const json = await res.json();
+    img.src = json.image_url + '?t=' + Date.now();
+    downloadLink.href = json.download_url;
+    renderCopy(json.copy || {});
+    show(result);
+  } catch (err) {
+    error.textContent = '錯誤：' + err.message;
+    show(error);
+  } finally {
+    submitBtn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
