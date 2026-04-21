@@ -21,7 +21,15 @@ pip install -r requirements.txt
 
 ## 使用方式
 
-### 方式 0：網頁介面（推薦）
+### 方式 -1：純瀏覽器版（最簡單，雙擊開啟）
+
+直接用瀏覽器打開 `standalone.html` 即可，不用裝 Python、不用啟動 server。
+圖片合成在前端用 HTML5 Canvas 完成，資料不會離開你的瀏覽器。
+
+- AI 文案為選用：貼上自己的 Anthropic API Key 才會呼叫（可選擇存在本地 localStorage）。
+- 無 API Key 也能用，手動填寫文案欄位後按「產生促銷圖」下載 PNG。
+
+### 方式 0：Flask 網頁介面（需跑 Python）
 
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-...   # 可選，沒設定會用模板文案
@@ -87,6 +95,7 @@ python3 ecom_gen.py --product-json examples/sample_product.json --no-ai -o out.p
 
 ```
 .
+├── standalone.html          # 純瀏覽器版（雙擊即開）
 ├── ecom_gen.py              # CLI 進入點
 ├── web.py                   # Flask 網頁介面
 ├── copywriter.py            # Claude API 文案生成
