@@ -1,0 +1,12 @@
+{
+  "name": "極簡無線降噪耳機 Pro",
+  "price": 4990,
+  "discount_price": 3690,
+  "features": [
+    "40小時超長續航",
+    "主動降噪 -42dB",
+    "Hi-Res 無損音質",
+    "IPX5 防潑水"
+  ],
+  "image": "examples/placeholder.png"
+}
