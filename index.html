@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>電商圖文產生器（純瀏覽器版）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', 'Heiti TC', sans-serif;
+  background: linear-gradient(135deg, #fff3e5 0%, #ffd6b0 100%);
+  color: #2b2b2b;
+  min-height: 100vh;
+}
+.container { max-width: 1280px; margin: 0 auto; padding: 28px 20px; }
+header { text-align: center; margin-bottom: 20px; }
+header h1 { margin: 0 0 6px; font-size: 26px; letter-spacing: 1px; }
+.subtitle { margin: 0; color: #7a6a5a; font-size: 14px; }
+
+.layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+
+.panel {
+  background: #fff; border-radius: 16px; padding: 22px;
+  box-shadow: 0 10px 30px rgba(180, 120, 80, 0.15);
+}
+.panel h2 { margin: 0 0 14px; font-size: 16px; color: #555; letter-spacing: 1px; }
+
+.form label { display: block; margin-bottom: 12px; }
+.form label > span {
+  display: block; font-size: 12px; font-weight: 600; color: #666; margin-bottom: 4px;
+}
+.form input[type=text], .form input[type=number], .form input[type=password],
+.form input[type=file], .form textarea, .form select {
+  width: 100%; padding: 9px 11px; border: 1px solid #e0d4c3; border-radius: 8px;
+  font-size: 14px; font-family: inherit; background: #fafaf7; transition: border 0.15s;
+}
+.form input:focus, .form textarea:focus, .form select:focus {
+  outline: none; border-color: #e84a4a; background: #fff;
+}
+.form .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form .row label { margin-bottom: 12px; }
+
+.checkbox { display: flex !important; align-items: center; gap: 8px; cursor: pointer; user-select: none; margin: 10px 0; }
+.checkbox input { width: auto !important; margin: 0; }
+.checkbox span { margin: 0 !important; font-weight: 500 !important; color: #333 !important; }
+
+.btn {
+  width: 100%; padding: 12px; color: #fff; border: none; border-radius: 10px;
+  font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: 2px;
+  transition: transform 0.1s, box-shadow 0.1s; margin-top: 6px;
+}
+.btn.primary { background: linear-gradient(135deg, #e84a4a 0%, #ff6b3d 100%); }
+.btn.primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(232, 74, 74, 0.35); }
+.btn.secondary { background: #2b2b2b; }
+.btn.secondary:hover:not(:disabled) { background: #000; }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.ai-section {
+  background: #faf6f0; border-radius: 10px; padding: 12px 14px; margin-bottom: 14px;
+  border: 1px dashed #e0d4c3;
+}
+.ai-section h3 { margin: 0 0 8px; font-size: 13px; color: #8a6d1a; letter-spacing: 1px; }
+.ai-note { font-size: 12px; color: #999; margin: 6px 0 0; line-height: 1.6; }
+
+.preview-wrap {
+  background: #faf6f0; border-radius: 12px; padding: 14px;
+  min-height: 300px; display: flex; align-items: center; justify-content: center;
+}
+canvas#preview { max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); display: block; }
+.preview-wrap.empty { color: #aaa; text-align: center; font-size: 14px; line-height: 1.8; }
+
+.preview-actions { display: flex; gap: 10px; margin-top: 12px; }
+.preview-actions .btn { margin-top: 0; }
+
+.status { font-size: 13px; color: #888; margin-top: 8px; min-height: 18px; }
+.status.error { color: #c44; }
+.status.success { color: #2a9955; }
+
+.footer { text-align: center; margin-top: 24px; font-size: 12px; color: #8a7a6a; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>電商圖文產生器</h1>
+    <p class="subtitle">純瀏覽器版 · 填資料 → 一鍵產圖 → 下載 PNG</p>
+  </header>
+
+  <div class="layout">
+    <section class="panel form">
+      <h2>商品資訊</h2>
+
+      <label>
+        <span>商品名稱 *</span>
+        <input type="text" id="name" required placeholder="極簡無線降噪耳機 Pro">
+      </label>
+
+      <div class="row">
+        <label><span>原價 (NT$)</span><input type="number" id="price" step="1" placeholder="4990"></label>
+        <label><span>折扣價 (NT$)</span><input type="number" id="discountPrice" step="1" placeholder="3690"></label>
+      </div>
+
+      <label>
+        <span>商品圖（建議透明背景 PNG）</span>
+        <input type="file" id="image" accept="image/*">
+      </label>
+
+      <div class="row">
+        <label><span>版型</span>
+          <select id="layout">
+            <option value="square">square (1080×1080)</option>
+            <option value="banner">banner (1200×628)</option>
+          </select>
+        </label>
+        <label><span>主題</span>
+          <select id="theme">
+            <option value="sunset">sunset 橘紅</option>
+            <option value="ocean">ocean 藍</option>
+            <option value="mono">mono 黑白</option>
+          </select>
+        </label>
+      </div>
+
+      <h2 style="margin-top:16px">文案</h2>
+
+      <label><span>主打標語</span><input type="text" id="tagline" placeholder="沈浸音樂，與世界靜靜獨處"></label>
+      <label><span>亮點（每行一項，建議 3 項）</span>
+        <textarea id="highlights" rows="4" placeholder="40小時超長續航&#10;主動降噪 -42dB&#10;Hi-Res 無損音質"></textarea>
+      </label>
+      <div class="row">
+        <label><span>CTA 按鈕文字</span><input type="text" id="cta" value="立即購買"></label>
+        <label><span>角落徽章（可留空）</span><input type="text" id="badge" placeholder="限時特惠"></label>
+      </div>
+
+      <div class="ai-section">
+        <h3>✨ AI 自動產生文案（選用）</h3>
+        <label><span>Anthropic API Key（儲存在瀏覽器本地）</span>
+          <input type="password" id="apiKey" placeholder="sk-ant-...">
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" id="rememberKey">
+          <span>在此瀏覽器記住 API Key</span>
+        </label>
+        <button type="button" class="btn secondary" id="aiBtn">讓 Claude 幫我寫文案</button>
+        <p class="ai-note">⚠️ 瀏覽器直接呼叫 Claude API 會將 Key 暴露在客戶端，僅建議個人測試使用。</p>
+      </div>
+
+      <button type="button" class="btn primary" id="renderBtn">產生促銷圖</button>
+      <div class="status" id="status"></div>
+    </section>
+
+    <section class="panel">
+      <h2>預覽</h2>
+      <div class="preview-wrap empty" id="previewWrap">
+        <p>尚未產生<br>填完左側後點「產生促銷圖」</p>
+      </div>
+      <div class="preview-actions" id="previewActions" style="display:none">
+        <button type="button" class="btn secondary" id="downloadBtn">下載 PNG</button>
+      </div>
+    </section>
+  </div>
+
+  <p class="footer">Powered by HTML5 Canvas · 無需安裝 · 資料不離開你的瀏覽器</p>
+</div>
+
+<canvas id="preview" width="1080" height="1080" style="display:none"></canvas>
+
+<script>
+const THEMES = {
+  sunset: { bgTop: '#fff3e5', bgBottom: '#ffc9ad', primary: '#e84a4a', accent: '#ffc13c', textDark: '#281e1e', textLight: '#ffffff', textMuted: '#786e6e' },
+  ocean:  { bgTop: '#e8f5fd', bgBottom: '#a8d8ea', primary: '#1b75bc', accent: '#ffb446', textDark: '#14283c', textLight: '#ffffff', textMuted: '#64788c' },
+  mono:   { bgTop: '#f5f5f5', bgBottom: '#dcdcdc', primary: '#1e1e1e', accent: '#ff5a3c', textDark: '#1e1e1e', textLight: '#ffffff', textMuted: '#828282' },
+};
+
+const FONT = "'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', 'Heiti TC', sans-serif";
+
+// ---------- Canvas helpers ----------
+function roundRect(ctx, x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+function wrapText(ctx, text, maxWidth) {
+  const lines = []; let cur = '';
+  for (const ch of text) {
+    const probe = cur + ch;
+    if (ctx.measureText(probe).width <= maxWidth) cur = probe;
+    else { if (cur) lines.push(cur); cur = ch; }
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
+function drawGradient(ctx, w, h, top, bottom) {
+  const g = ctx.createLinearGradient(0, 0, 0, h);
+  g.addColorStop(0, top); g.addColorStop(1, bottom);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+}
+function drawCard(ctx, x, y, w, h, radius) {
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.15)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 12;
+  roundRect(ctx, x, y, w, h, radius);
+  ctx.fillStyle = '#fff'; ctx.fill();
+  ctx.restore();
+}
+function drawFittedImage(ctx, img, bx, by, bw, bh, scaleFactor = 0.92) {
+  const scale = Math.min(bw / img.naturalWidth, bh / img.naturalHeight) * scaleFactor;
+  const iw = img.naturalWidth * scale, ih = img.naturalHeight * scale;
+  ctx.drawImage(img, bx + (bw - iw) / 2, by + (bh - ih) / 2, iw, ih);
+}
+
+// ---------- Layout: square 1080x1080 ----------
+function renderSquare(canvas, product, copy) {
+  const W = 1080, H = 1080;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const C = THEMES[product.theme];
+  const pad = 60;
+
+  drawGradient(ctx, W, H, C.bgTop, C.bgBottom);
+
+  const cardW = W - pad * 2, cardH = 560;
+  drawCard(ctx, pad, pad, cardW, cardH, 40);
+  if (product.image) {
+    drawFittedImage(ctx, product.image, pad, pad, cardW, cardH);
+  } else {
+    ctx.fillStyle = C.textMuted;
+    ctx.font = `500 60px ${FONT}`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(product.name || '商品', pad + cardW / 2, pad + cardH / 2);
+  }
+
+  ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  let y = pad + cardH + 40;
+  ctx.fillStyle = C.textDark;
+  ctx.font = `700 62px ${FONT}`;
+  const nameLines = wrapText(ctx, product.name || '', W - pad * 2);
+  for (const line of nameLines.slice(0, 2)) { ctx.fillText(line, pad, y); y += 76; }
+
+  if (copy.tagline) {
+    y += 6;
+    ctx.fillStyle = C.primary;
+    ctx.font = `500 36px ${FONT}`;
+    for (const line of wrapText(ctx, copy.tagline, W - pad * 2).slice(0, 1)) {
+      ctx.fillText(line, pad, y); y += 48;
+    }
+  }
+
+  const priceY = H - pad - 100;
+  if (product.discountPrice != null && product.price != null) {
+    ctx.fillStyle = C.primary;
+    ctx.font = `900 72px ${FONT}`;
+    const dText = `NT$ ${Math.round(product.discountPrice).toLocaleString()}`;
+    ctx.fillText(dText, pad, priceY + 28);
+    const dw = ctx.measureText(dText).width;
+
+    ctx.fillStyle = C.textMuted;
+    ctx.font = `500 36px ${FONT}`;
+    const oText = `NT$ ${Math.round(product.price).toLocaleString()}`;
+    const ox = pad + dw + 20, oy = priceY + 50;
+    ctx.fillText(oText, ox, oy);
+    const ow = ctx.measureText(oText).width;
+    ctx.strokeStyle = C.textMuted; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(ox, oy + 24); ctx.lineTo(ox + ow, oy + 24); ctx.stroke();
+  } else if (product.price != null) {
+    ctx.fillStyle = C.primary;
+    ctx.font = `900 72px ${FONT}`;
+    ctx.fillText(`NT$ ${Math.round(product.price).toLocaleString()}`, pad, priceY + 28);
+  }
+
+  const ctaText = copy.cta || '立即購買';
+  ctx.font = `700 38px ${FONT}`;
+  const ctaTextW = ctx.measureText(ctaText).width;
+  const ctaW = ctaTextW + 70, ctaH = 76;
+  const ctaX = W - pad - ctaW, ctaY = H - pad - ctaH;
+  roundRect(ctx, ctaX, ctaY, ctaW, ctaH, ctaH / 2);
+  ctx.fillStyle = C.primary; ctx.fill();
+  ctx.fillStyle = C.textLight;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(ctaText, ctaX + ctaW / 2, ctaY + ctaH / 2);
+  ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+
+  if (copy.badge) {
+    ctx.font = `700 30px ${FONT}`;
+    const bw = ctx.measureText(copy.badge).width + 36;
+    const bh = 54, bx = W - pad - bw, by = pad;
+    roundRect(ctx, bx, by, bw, bh, bh / 2);
+    ctx.fillStyle = C.accent; ctx.fill();
+    ctx.fillStyle = C.textDark;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(copy.badge, bx + bw / 2, by + bh / 2);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  }
+}
+
+// ---------- Layout: banner 1200x628 ----------
+function renderBanner(canvas, product, copy) {
+  const W = 1200, H = 628;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const C = THEMES[product.theme];
+  const pad = 50;
+
+  drawGradient(ctx, W, H, C.bgTop, C.bgBottom);
+
+  const imgW = 520, imgH = H - pad * 2;
+  drawCard(ctx, pad, pad, imgW, imgH, 32);
+  if (product.image) drawFittedImage(ctx, product.image, pad, pad, imgW, imgH);
+
+  const textX = pad + imgW + 50;
+  const textW = W - textX - pad;
+
+  ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  let y = pad + 10;
+  ctx.fillStyle = C.textDark;
+  ctx.font = `700 54px ${FONT}`;
+  const nameLines = wrapText(ctx, product.name || '', textW);
+  for (const line of nameLines.slice(0, 2)) { ctx.fillText(line, textX, y); y += 66; }
+
+  if (copy.tagline) {
+    y += 4;
+    ctx.fillStyle = C.primary;
+    ctx.font = `500 30px ${FONT}`;
+    for (const line of wrapText(ctx, copy.tagline, textW).slice(0, 2)) {
+      ctx.fillText(line, textX, y); y += 40;
+    }
+  }
+
+  y += 8;
+  ctx.font = `400 26px ${FONT}`;
+  for (const hl of (copy.highlights || []).slice(0, 3)) {
+    ctx.fillStyle = C.primary;
+    ctx.beginPath(); ctx.arc(textX + 6, y + 18, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = C.textDark;
+    ctx.fillText(hl, textX + 24, y);
+    y += 40;
+  }
+
+  const priceY = H - pad - 90;
+  ctx.fillStyle = C.primary;
+  ctx.font = `900 56px ${FONT}`;
+  if (product.discountPrice != null) {
+    ctx.fillText(`NT$ ${Math.round(product.discountPrice).toLocaleString()}`, textX, priceY);
+  } else if (product.price != null) {
+    ctx.fillText(`NT$ ${Math.round(product.price).toLocaleString()}`, textX, priceY);
+  }
+
+  const ctaText = copy.cta || '立即購買';
+  ctx.font = `700 30px ${FONT}`;
+  const ctaTextW = ctx.measureText(ctaText).width;
+  const ctaW = ctaTextW + 60, ctaH = 62;
+  const ctaX = W - pad - ctaW, ctaY = H - pad - ctaH;
+  roundRect(ctx, ctaX, ctaY, ctaW, ctaH, ctaH / 2);
+  ctx.fillStyle = C.primary; ctx.fill();
+  ctx.fillStyle = C.textLight;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(ctaText, ctaX + ctaW / 2, ctaY + ctaH / 2);
+  ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+}
+
+// ---------- Claude API (optional, browser-side) ----------
+const CLAUDE_SYSTEM_PROMPT = `你是資深電商文案專家，擅長撰寫繁體中文的社群促銷文案。
+根據用戶提供的商品資訊 (JSON)，產出吸睛、簡短、有行動力的文案。
+請嚴格輸出以下 JSON（不要加 markdown、不要任何解釋）：
+{
+  "tagline": "一句吸睛主打標語，最多 18 個全形字",
+  "highlights": ["亮點1", "亮點2", "亮點3"],
+  "cta": "行動呼籲文字，最多 6 個全形字",
+  "badge": "角落徽章文字，最多 5 個全形字，或 null"
+}
+規則：
+- highlights 列出 3 個商品賣點，每項最多 10 個全形字
+- 若商品有折扣價，badge 請放「限時特惠」「熱銷中」等；無折扣則為 null
+- 文案避免浮誇空話，聚焦商品實際特色`;
+
+async function callClaude(apiKey, product, model = 'claude-haiku-4-5-20251001') {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: 600,
+      system: CLAUDE_SYSTEM_PROMPT,
+      messages: [{ role: 'user', content: JSON.stringify(product, null, 2) }],
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Claude API ${res.status}: ${err.slice(0, 200)}`);
+  }
+  const data = await res.json();
+  const text = (data.content?.[0]?.text || '').trim();
+  const start = text.indexOf('{'), end = text.lastIndexOf('}');
+  if (start === -1 || end === -1) throw new Error('無法解析 Claude 回傳的 JSON');
+  return JSON.parse(text.slice(start, end + 1));
+}
+
+// ---------- Form <-> state ----------
+function readForm() {
+  const val = id => document.getElementById(id).value.trim();
+  const num = id => { const v = val(id); return v === '' ? null : Number(v); };
+  const highlights = val('highlights').split('\n').map(s => s.trim()).filter(Boolean);
+  return {
+    product: {
+      name: val('name'),
+      price: num('price'),
+      discountPrice: num('discountPrice'),
+      features: highlights,
+      theme: val('theme'),
+      image: window._productImage || null,
+    },
+    copy: {
+      tagline: val('tagline'),
+      highlights,
+      cta: val('cta') || '立即購買',
+      badge: val('badge') || null,
+    },
+    layout: val('layout'),
+  };
+}
+function writeCopy(copy) {
+  document.getElementById('tagline').value = copy.tagline || '';
+  document.getElementById('highlights').value = (copy.highlights || []).join('\n');
+  document.getElementById('cta').value = copy.cta || '立即購買';
+  document.getElementById('badge').value = copy.badge || '';
+}
+
+function setStatus(msg, kind = '') {
+  const el = document.getElementById('status');
+  el.textContent = msg || '';
+  el.className = 'status' + (kind ? ' ' + kind : '');
+}
+
+// ---------- Wire up UI ----------
+const canvas = document.getElementById('preview');
+const previewWrap = document.getElementById('previewWrap');
+const previewActions = document.getElementById('previewActions');
+
+document.getElementById('image').addEventListener('change', (e) => {
+  const f = e.target.files?.[0];
+  if (!f) { window._productImage = null; return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => { window._productImage = img; setStatus('商品圖已載入', 'success'); };
+    img.onerror = () => setStatus('商品圖載入失敗', 'error');
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(f);
+});
+
+document.getElementById('renderBtn').addEventListener('click', async () => {
+  const { product, copy, layout } = readForm();
+  if (!product.name) { setStatus('請輸入商品名稱', 'error'); return; }
+  try {
+    await document.fonts.ready;
+    if (layout === 'banner') renderBanner(canvas, product, copy);
+    else renderSquare(canvas, product, copy);
+    previewWrap.innerHTML = '';
+    previewWrap.classList.remove('empty');
+    canvas.style.display = 'block';
+    canvas.style.maxWidth = '100%';
+    canvas.style.height = 'auto';
+    previewWrap.appendChild(canvas);
+    previewActions.style.display = 'flex';
+    setStatus('已產生 ' + layout + ' 版型圖片', 'success');
+  } catch (e) {
+    setStatus('產圖失敗：' + e.message, 'error');
+  }
+});
+
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  const a = document.createElement('a');
+  const layout = document.getElementById('layout').value;
+  a.download = `ecom_${layout}_${Date.now()}.png`;
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+});
+
+document.getElementById('aiBtn').addEventListener('click', async () => {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  if (!apiKey) { setStatus('請先輸入 Anthropic API Key', 'error'); return; }
+  const { product } = readForm();
+  if (!product.name) { setStatus('請先輸入商品名稱', 'error'); return; }
+  if (document.getElementById('rememberKey').checked) {
+    localStorage.setItem('anthropicApiKey', apiKey);
+  } else {
+    localStorage.removeItem('anthropicApiKey');
+  }
+  const aiBtn = document.getElementById('aiBtn');
+  aiBtn.disabled = true; aiBtn.textContent = '產生中…';
+  setStatus('呼叫 Claude API 中…');
+  try {
+    const payload = {
+      name: product.name,
+      price: product.price,
+      discount_price: product.discountPrice,
+      features: product.features,
+    };
+    const copy = await callClaude(apiKey, payload);
+    writeCopy(copy);
+    setStatus('AI 文案已填入表單', 'success');
+  } catch (e) {
+    setStatus('AI 失敗：' + e.message, 'error');
+  } finally {
+    aiBtn.disabled = false; aiBtn.textContent = '讓 Claude 幫我寫文案';
+  }
+});
+
+// Restore API key from localStorage
+(function init() {
+  const saved = localStorage.getItem('anthropicApiKey');
+  if (saved) {
+    document.getElementById('apiKey').value = saved;
+    document.getElementById('rememberKey').checked = true;
+  }
+})();
+</script>
+</body>
+</html>
