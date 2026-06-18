@@ -150,6 +150,37 @@ print(result["results"]["maya"])   # MAYA 社群產出
 print(result["report"])            # NORA 週報
 ```
 
+### 自動化：一鍵 / 排程產出整包物料
+
+`team_run.py` 會跑完整個團隊並把成品寫成檔案（週報 Markdown + 每篇貼文圖 PNG），
+適合掛排程每週自動產出，不用開瀏覽器。
+
+```bash
+# 先把品牌資料存成 JSON（範例已附 brands/hanfresh.json）
+python3 team_run.py --brand brands/hanfresh.json \
+    --request "這週主推泡菜，幫我準備一波完整行銷" --theme sunset
+```
+
+輸出在 `marketing_runs/<日期>/`：
+
+```
+marketing_runs/2026-06-18/
+├── report.md       # 完整週報（NORA 派發 + 四位專員產出 + 週報）
+├── team.json       # 原始結構化資料
+└── posts/          # MAYA 每篇貼文的社群圖（composer.py 合成）
+    ├── post_01_週一.png
+    └── ...（共 14 張）
+```
+
+**掛週排程（cron）**：在你自己的機器 / 伺服器上（雲端容器是暫時的，排程不會留存）：
+
+```bash
+# 每週一早上 9:00 自動產出一波（記得在環境設好 ANTHROPIC_API_KEY）
+0 9 * * 1  cd /path/to/Test && ANTHROPIC_API_KEY=sk-ant-... ./run_weekly.sh >> cron.log 2>&1
+```
+
+`run_weekly.sh` 可用環境變數 `BRAND`、`REQUEST` 覆寫品牌檔與需求。
+
 ### 行銷團隊結構
 
 ```
