@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>你的 5 人 AI 行銷團隊</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='team.css') }}">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <h1>你的 <span class="accent">5 人</span> AI 行銷團隊</h1>
+    <p class="sub">對 <strong>NORA</strong> 說一句話，整個團隊就動起來</p>
+    <div class="team-chips">
+      <span class="chip nora">👑 NORA 統籌</span>
+      <span class="chip">📣 MAYA 社群</span>
+      <span class="chip">🎨 LEON 設計</span>
+      <span class="chip">🔍 IRIS SEO</span>
+      <span class="chip">📊 JACK 廣告</span>
+    </div>
+  </header>
+
+  {% if has_api_key %}
+    <p class="status ok">● 已連線 Claude（模型：{{ model }}）— 產出為即時 AI 生成</p>
+  {% else %}
+    <p class="status off">● 未設定 ANTHROPIC_API_KEY — 目前為離線示範模式（套版內容）。設定環境變數後即產出真實 AI 內容。</p>
+  {% endif %}
+
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+  <form method="post" action="/run" class="panel">
+    <details class="brand-box" {% if not data %}open{% endif %}>
+      <summary>① 品牌設定（填一次，全團隊共用）</summary>
+      <div class="grid">
+        <label>品牌 / 產品名稱
+          <input type="text" name="name" value="{{ brand.name }}" placeholder="例：靜謐降噪耳機 Pro">
+        </label>
+        <label>產業 / 品類
+          <input type="text" name="industry" value="{{ brand.industry }}" placeholder="例：無線降噪耳機">
+        </label>
+        <label>目標受眾
+          <input type="text" name="audience" value="{{ brand.audience }}" placeholder="例：25-40 歲通勤上班族">
+        </label>
+        <label>品牌語氣
+          <input type="text" name="tone" value="{{ brand.tone }}" placeholder="例：專業但親切、不浮誇">
+        </label>
+        <label>官網 / Landing 網址（可選）
+          <input type="text" name="website" value="{{ brand.website }}" placeholder="https://...">
+        </label>
+        <label>主力通路（每行一個）
+          <textarea name="channels" rows="3" placeholder="Facebook&#10;Instagram&#10;Threads">{{ brand.channels | join('\n') }}</textarea>
+        </label>
+        <label>主打產品 / 服務（每行一個）
+          <textarea name="products" rows="3" placeholder="降噪耳機&#10;運動耳機">{{ brand.products | join('\n') }}</textarea>
+        </label>
+        <label>核心賣點（每行一個）
+          <textarea name="selling_points" rows="3" placeholder="40 小時續航&#10;主動降噪 -42dB&#10;Hi-Res 音質">{{ brand.selling_points | join('\n') }}</textarea>
+        </label>
+        <label class="full">其他補充（活動、禁忌字、競品…）
+          <textarea name="notes" rows="2" placeholder="例：本月有母親節檔期；避免使用『最便宜』字眼">{{ brand.notes }}</textarea>
+        </label>
+      </div>
+    </details>
+
+    <label class="ask full">② 對 NORA 說一句話
+      <input type="text" name="request" value="{{ request_text }}"
+             placeholder="例：下週要推新的降噪耳機，幫我準備一波完整行銷">
+    </label>
+
+    <button type="submit">🚀 啟動行銷團隊</button>
+  </form>
+
+  {% if data %}
+    {% if not data.online %}
+      <p class="status off small">以下為離線示範內容（套版）。設定 API Key 後會換成真實 AI 產出。</p>
+    {% endif %}
+
+    {# ---- NORA 任務派發 ---- #}
+    <section class="card nora-card">
+      <h2>👑 NORA 的任務派發</h2>
+      <div class="dispatch">
+        {% for key, spec in specialists.items() %}
+          <div class="dispatch-row">
+            <span class="who">{{ spec.icon }} {{ spec.name }}</span>
+            <span class="brief">{{ data.dispatch[key] }}</span>
+          </div>
+        {% endfor %}
+      </div>
+      {% if data.dispatch.deadlines %}
+        <h3>⏱ 本週關鍵時程</h3>
+        <ul>{% for d in data.dispatch.deadlines %}<li>{{ d }}</li>{% endfor %}</ul>
+      {% endif %}
+    </section>
+
+    {# ---- MAYA 社群 ---- #}
+    {% set maya = data.results.maya %}
+    <section class="card">
+      <h2>📣 MAYA · 社群小編</h2>
+      {% if maya.threads_hooks %}
+        <h3>Threads 開頭</h3>
+        <ul>{% for h in maya.threads_hooks %}<li>{{ h }}</li>{% endfor %}</ul>
+      {% endif %}
+      {% if maya.weekly_calendar %}
+        <h3>一週貼文行事曆（{{ maya.weekly_calendar | length }} 則）</h3>
+        <table>
+          <thead><tr><th>日</th><th>通路</th><th>主題</th><th>文案</th></tr></thead>
+          <tbody>
+          {% for p in maya.weekly_calendar %}
+            <tr><td>{{ p.day }}</td><td>{{ p.channel }}</td><td>{{ p.topic }}</td><td>{{ p.caption }}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      {% endif %}
+      {% if maya.rewrites and maya.rewrites.versions %}
+        <h3>一鍵改寫 3 版本</h3>
+        <p class="muted">原文：{{ maya.rewrites.original }}</p>
+        <ul>{% for v in maya.rewrites.versions %}<li>{{ v }}</li>{% endfor %}</ul>
+      {% endif %}
+    </section>
+
+    {# ---- LEON 設計 ---- #}
+    {% set leon = data.results.leon %}
+    <section class="card">
+      <h2>🎨 LEON · 設計總監</h2>
+      {% if leon.brand_guidelines %}
+        <h3>品牌規範</h3>
+        <ul>
+          <li>配色：{{ leon.brand_guidelines.color_direction }}</li>
+          <li>字體：{{ leon.brand_guidelines.typography }}</li>
+          <li>影像：{{ leon.brand_guidelines.imagery }}</li>
+        </ul>
+      {% endif %}
+      {% if leon.landing_page %}
+        <h3>Landing Page 內容</h3>
+        {% for s in leon.landing_page %}
+          <div class="block">
+            <strong>{{ s.section }}</strong>
+            {% if s.headline %}<div class="hl">{{ s.headline }}</div>{% endif %}
+            {% if s.subhead %}<div class="muted">{{ s.subhead }}</div>{% endif %}
+            {% if s.body %}<div>{{ s.body }}</div>{% endif %}
+            {% if s.cta %}<span class="cta">{{ s.cta }}</span>{% endif %}
+          </div>
+        {% endfor %}
+      {% endif %}
+      {% if leon.sales_page %}
+        <h3>Sales Page 內容</h3>
+        {% for s in leon.sales_page %}
+          <div class="block"><strong>{{ s.section }}</strong><div>{{ s.content }}</div></div>
+        {% endfor %}
+      {% endif %}
+    </section>
+
+    {# ---- IRIS SEO ---- #}
+    {% set iris = data.results.iris %}
+    <section class="card">
+      <h2>🔍 IRIS · SEO 專員</h2>
+      {% if iris.keywords %}
+        <h3>關鍵字機會（{{ iris.keywords | length }} 組）</h3>
+        <table>
+          <thead><tr><th>關鍵字</th><th>意圖</th><th>難度</th><th>建議</th></tr></thead>
+          <tbody>
+          {% for k in iris.keywords %}
+            <tr><td>{{ k.keyword }}</td><td>{{ k.intent }}</td><td>{{ k.difficulty }}</td><td>{{ k.note }}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      {% endif %}
+      {% if iris.competitor_teardown %}
+        <h3>競品拆解</h3>
+        <ul>{% for c in iris.competitor_teardown %}<li>{{ c }}</li>{% endfor %}</ul>
+      {% endif %}
+      {% if iris.article_outline %}
+        <h3>文章大綱 + Meta</h3>
+        <div class="block">
+          <strong>{{ iris.article_outline.title }}</strong>
+          <div class="muted">Meta 標題：{{ iris.article_outline.meta_title }}</div>
+          <div class="muted">Meta 描述：{{ iris.article_outline.meta_description }}</div>
+          <ul>{% for o in iris.article_outline.outline %}<li>{{ o }}</li>{% endfor %}</ul>
+        </div>
+      {% endif %}
+    </section>
+
+    {# ---- JACK 廣告 ---- #}
+    {% set jack = data.results.jack %}
+    <section class="card">
+      <h2>📊 JACK · 廣告投放手</h2>
+      {% if jack.ad_hooks %}
+        <h3>廣告 hook + 文案（{{ jack.ad_hooks | length }} 組）</h3>
+        {% for a in jack.ad_hooks %}
+          <div class="block">
+            <div class="hl">{{ a.hook }}</div>
+            <div>{{ a.primary_text }}</div>
+            {% if a.cta %}<span class="cta">{{ a.cta }}</span>{% endif %}
+          </div>
+        {% endfor %}
+      {% endif %}
+      {% if jack.daily_report_template %}
+        <h3>每日數據簡報規則</h3>
+        <ul>{% for r in jack.daily_report_template %}<li>{{ r }}</li>{% endfor %}</ul>
+      {% endif %}
+      {% if jack.audience_budget and jack.audience_budget.audiences %}
+        <h3>受眾 + 預算分配</h3>
+        <table>
+          <thead><tr><th>受眾</th><th>鎖定方式</th><th>預算 %</th></tr></thead>
+          <tbody>
+          {% for a in jack.audience_budget.audiences %}
+            <tr><td>{{ a.name }}</td><td>{{ a.targeting }}</td><td>{{ a.budget_pct }}%</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% if jack.audience_budget.notes %}<p class="muted">{{ jack.audience_budget.notes }}</p>{% endif %}
+      {% endif %}
+    </section>
+
+    {# ---- NORA 週報 ---- #}
+    {% set report = data.report %}
+    <section class="card nora-card">
+      <h2>👑 NORA 的團隊週報</h2>
+      <p class="summary">{{ report.summary }}</p>
+      {% if report.highlights %}
+        <h3>本週重點</h3>
+        <ul>{% for h in report.highlights %}<li>{{ h }}</li>{% endfor %}</ul>
+      {% endif %}
+      {% if report.next_steps %}
+        <h3>等你決策 / 下週推進</h3>
+        <ul>{% for n in report.next_steps %}<li>{{ n }}</li>{% endfor %}</ul>
+      {% endif %}
+    </section>
+  {% endif %}
+
+  <footer>✨ NORA 統籌全局，帶領團隊為你創造最大行銷成效</footer>
+</div>
+</body>
+</html>
