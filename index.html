@@ -2,532 +2,476 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>電商圖文產生器（純瀏覽器版）</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#c0392b">
+<title>韓鮮生 公關名單</title>
 <style>
-* { box-sizing: border-box; }
-body {
-  margin: 0;
-  font-family: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', 'Heiti TC', sans-serif;
-  background: linear-gradient(135deg, #fff3e5 0%, #ffd6b0 100%);
-  color: #2b2b2b;
-  min-height: 100vh;
+:root{
+  --brand:#c0392b; --brand-d:#9c2c20; --bg:#f5f1ec; --card:#fff;
+  --line:#e7e0d8; --ink:#2b2b2b; --muted:#8a8076; --ok:#2e9e5b; --warn:#e08a2b; --off:#b0a89e;
+  --食記:#d9822b; --料理:#1f8a70;
 }
-.container { max-width: 1280px; margin: 0 auto; padding: 28px 20px; }
-header { text-align: center; margin-bottom: 20px; }
-header h1 { margin: 0 0 6px; font-size: 26px; letter-spacing: 1px; }
-.subtitle { margin: 0; color: #7a6a5a; font-size: 14px; }
-
-.layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
-@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
-
-.panel {
-  background: #fff; border-radius: 16px; padding: 22px;
-  box-shadow: 0 10px 30px rgba(180, 120, 80, 0.15);
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'PingFang TC','Noto Sans TC','Microsoft JhengHei','Heiti TC',sans-serif;
+  background:var(--bg); color:var(--ink); -webkit-text-size-adjust:100%;
+  padding-bottom:env(safe-area-inset-bottom);
 }
-.panel h2 { margin: 0 0 14px; font-size: 16px; color: #555; letter-spacing: 1px; }
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:16px}
 
-.form label { display: block; margin-bottom: 12px; }
-.form label > span {
-  display: block; font-size: 12px; font-weight: 600; color: #666; margin-bottom: 4px;
+/* ---- 頂列 ---- */
+.topbar{
+  position:sticky;top:0;z-index:20;background:var(--brand);color:#fff;
+  padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;
+  display:flex;align-items:center;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,.15);
 }
-.form input[type=text], .form input[type=number], .form input[type=password],
-.form input[type=file], .form textarea, .form select {
-  width: 100%; padding: 9px 11px; border: 1px solid #e0d4c3; border-radius: 8px;
-  font-size: 14px; font-family: inherit; background: #fafaf7; transition: border 0.15s;
-}
-.form input:focus, .form textarea:focus, .form select:focus {
-  outline: none; border-color: #e84a4a; background: #fff;
-}
-.form .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.form .row label { margin-bottom: 12px; }
+.topbar .back{background:rgba(255,255,255,.18);border:none;color:#fff;border-radius:10px;
+  width:34px;height:34px;font-size:18px;line-height:1;display:none}
+.topbar h1{font-size:17px;margin:0;flex:1;font-weight:700;letter-spacing:.5px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar .gear{background:rgba(255,255,255,.18);border:none;color:#fff;border-radius:10px;
+  width:34px;height:34px;font-size:16px}
+.dot{width:11px;height:11px;border-radius:50%;background:var(--off);flex:0 0 auto;
+  box-shadow:0 0 0 3px rgba(255,255,255,.25)}
+.dot.synced{background:var(--ok)} .dot.saving{background:var(--warn)} .dot.offline{background:#888}
 
-.checkbox { display: flex !important; align-items: center; gap: 8px; cursor: pointer; user-select: none; margin: 10px 0; }
-.checkbox input { width: auto !important; margin: 0; }
-.checkbox span { margin: 0 !important; font-weight: 500 !important; color: #333 !important; }
+/* ---- 工具列 ---- */
+.tools{position:sticky;top:calc(env(safe-area-inset-top) + 54px);z-index:15;
+  background:var(--bg);padding:10px 12px 6px;border-bottom:1px solid var(--line)}
+.search{width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:12px;
+  background:#fff;outline:none}
+.filters{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.filters select{flex:1;min-width:90px;padding:9px 10px;border:1px solid var(--line);
+  border-radius:10px;background:#fff;color:var(--ink)}
+.count{font-size:12px;color:var(--muted);padding:6px 2px 0}
 
-.btn {
-  width: 100%; padding: 12px; color: #fff; border: none; border-radius: 10px;
-  font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: 2px;
-  transition: transform 0.1s, box-shadow 0.1s; margin-top: 6px;
-}
-.btn.primary { background: linear-gradient(135deg, #e84a4a 0%, #ff6b3d 100%); }
-.btn.primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(232, 74, 74, 0.35); }
-.btn.secondary { background: #2b2b2b; }
-.btn.secondary:hover:not(:disabled) { background: #000; }
-.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+/* ---- 清單 ---- */
+.list{padding:10px 12px 90px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 14px;
+  margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.card .row1{display:flex;align-items:center;gap:8px}
+.tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;color:#fff;flex:0 0 auto}
+.tag.食記{background:var(--食記)} .tag.料理{background:var(--料理)} .tag.other{background:#888}
+.name{font-weight:700;font-size:16px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fans{font-size:12px;color:var(--muted);flex:0 0 auto}
+.handle{font-size:13px;color:var(--brand);margin-top:3px}
+/* 進度條 */
+.prog{display:flex;gap:4px;margin-top:10px}
+.step{flex:1;text-align:center}
+.step .bar{height:6px;border-radius:3px;background:#e9e2da}
+.step.done .bar{background:var(--ok)}
+.step .lbl{font-size:9px;color:var(--muted);margin-top:3px}
+.step.done .lbl{color:var(--ok);font-weight:700}
 
-.ai-section {
-  background: #faf6f0; border-radius: 10px; padding: 12px 14px; margin-bottom: 14px;
-  border: 1px dashed #e0d4c3;
-}
-.ai-section h3 { margin: 0 0 8px; font-size: 13px; color: #8a6d1a; letter-spacing: 1px; }
-.ai-note { font-size: 12px; color: #999; margin: 6px 0 0; line-height: 1.6; }
+/* ---- 詳細頁 ---- */
+.detail{padding:12px 14px 100px;display:none}
+.detail.show{display:block}
+.list.hide,.tools.hide{display:none}
+.section{background:#fff;border:1px solid var(--line);border-radius:14px;margin-bottom:14px;overflow:hidden}
+.section h3{margin:0;padding:11px 14px;font-size:14px;background:#faf6f1;border-bottom:1px solid var(--line);color:var(--brand-d)}
+.field{padding:11px 14px;border-bottom:1px solid #f1ebe4}
+.field:last-child{border-bottom:none}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+.field input[type=text],.field input[type=date],.field textarea,.field select{
+  width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.field textarea{min-height:70px;resize:vertical}
+/* 開關 */
+.toggle{display:flex;align-items:center;justify-content:space-between}
+.toggle .t-lbl{font-size:14px;color:var(--ink)}
+.sw{position:relative;width:50px;height:28px;flex:0 0 auto}
+.sw input{display:none}
+.sw .slot{position:absolute;inset:0;background:#d8d0c6;border-radius:999px;transition:.2s}
+.sw .knob{position:absolute;top:3px;left:3px;width:22px;height:22px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.sw input:checked + .slot{background:var(--ok)}
+.sw input:checked + .slot + .knob{transform:translateX(22px)}
+.sub-date{font-size:11px;color:var(--muted);margin-top:5px}
+/* 三段選擇 */
+.seg{display:flex;gap:6px}
+.seg button{flex:1;padding:9px 0;border:1px solid var(--line);background:#fff;border-radius:10px;font-size:13px;color:var(--ink)}
+.seg button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+/* 詳細頁頭 */
+.dhead{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.dhead .name{font-size:19px}
+.links{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.links a{font-size:12px;text-decoration:none;color:var(--brand);border:1px solid var(--line);background:#fff;padding:6px 11px;border-radius:999px}
+.mailbtn{display:block;width:100%;padding:13px;background:var(--brand);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;margin-bottom:14px;text-align:center;text-decoration:none}
 
-.preview-wrap {
-  background: #faf6f0; border-radius: 12px; padding: 14px;
-  min-height: 300px; display: flex; align-items: center; justify-content: center;
-}
-canvas#preview { max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); display: block; }
-.preview-wrap.empty { color: #aaa; text-align: center; font-size: 14px; line-height: 1.8; }
-
-.preview-actions { display: flex; gap: 10px; margin-top: 12px; }
-.preview-actions .btn { margin-top: 0; }
-
-.status { font-size: 13px; color: #888; margin-top: 8px; min-height: 18px; }
-.status.error { color: #c44; }
-.status.success { color: #2a9955; }
-
-.footer { text-align: center; margin-top: 24px; font-size: 12px; color: #8a7a6a; }
+/* ---- 設定 / 空狀態 ---- */
+.screen{padding:24px 18px;display:none}
+.screen.show{display:block}
+.screen h2{font-size:18px;margin:0 0 6px}
+.screen p{color:var(--muted);font-size:13px;line-height:1.6}
+.screen input{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;margin:12px 0}
+.screen button.primary{width:100%;padding:13px;background:var(--brand);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700}
+.screen button.ghost{width:100%;padding:11px;background:#fff;color:var(--brand);border:1px solid var(--line);border-radius:12px;margin-top:10px}
+.empty{text-align:center;color:var(--muted);padding:60px 20px}
+.toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:#333;color:#fff;
+  padding:10px 18px;border-radius:999px;font-size:13px;z-index:50;opacity:0;transition:.25s;pointer-events:none}
+.toast.show{opacity:.95}
 </style>
 </head>
 <body>
-<div class="container">
-  <header>
-    <h1>電商圖文產生器</h1>
-    <p class="subtitle">純瀏覽器版 · 填資料 → 一鍵產圖 → 下載 PNG</p>
-  </header>
 
-  <div class="layout">
-    <section class="panel form">
-      <h2>商品資訊</h2>
-
-      <label>
-        <span>商品名稱 *</span>
-        <input type="text" id="name" required placeholder="極簡無線降噪耳機 Pro">
-      </label>
-
-      <div class="row">
-        <label><span>原價 (NT$)</span><input type="number" id="price" step="1" placeholder="4990"></label>
-        <label><span>折扣價 (NT$)</span><input type="number" id="discountPrice" step="1" placeholder="3690"></label>
-      </div>
-
-      <label>
-        <span>商品圖（建議透明背景 PNG）</span>
-        <input type="file" id="image" accept="image/*">
-      </label>
-
-      <div class="row">
-        <label><span>版型</span>
-          <select id="layout">
-            <option value="square">square (1080×1080)</option>
-            <option value="banner">banner (1200×628)</option>
-          </select>
-        </label>
-        <label><span>主題</span>
-          <select id="theme">
-            <option value="sunset">sunset 橘紅</option>
-            <option value="ocean">ocean 藍</option>
-            <option value="mono">mono 黑白</option>
-          </select>
-        </label>
-      </div>
-
-      <h2 style="margin-top:16px">文案</h2>
-
-      <label><span>主打標語</span><input type="text" id="tagline" placeholder="沈浸音樂，與世界靜靜獨處"></label>
-      <label><span>亮點（每行一項，建議 3 項）</span>
-        <textarea id="highlights" rows="4" placeholder="40小時超長續航&#10;主動降噪 -42dB&#10;Hi-Res 無損音質"></textarea>
-      </label>
-      <div class="row">
-        <label><span>CTA 按鈕文字</span><input type="text" id="cta" value="立即購買"></label>
-        <label><span>角落徽章（可留空）</span><input type="text" id="badge" placeholder="限時特惠"></label>
-      </div>
-
-      <div class="ai-section">
-        <h3>✨ AI 自動產生文案（選用）</h3>
-        <label><span>Anthropic API Key（儲存在瀏覽器本地）</span>
-          <input type="password" id="apiKey" placeholder="sk-ant-...">
-        </label>
-        <label class="checkbox">
-          <input type="checkbox" id="rememberKey">
-          <span>在此瀏覽器記住 API Key</span>
-        </label>
-        <button type="button" class="btn secondary" id="aiBtn">讓 Claude 幫我寫文案</button>
-        <p class="ai-note">⚠️ 瀏覽器直接呼叫 Claude API 會將 Key 暴露在客戶端，僅建議個人測試使用。</p>
-      </div>
-
-      <button type="button" class="btn primary" id="renderBtn">產生促銷圖</button>
-      <div class="status" id="status"></div>
-    </section>
-
-    <section class="panel">
-      <h2>預覽</h2>
-      <div class="preview-wrap empty" id="previewWrap">
-        <p>尚未產生<br>填完左側後點「產生促銷圖」</p>
-      </div>
-      <div class="preview-actions" id="previewActions" style="display:none">
-        <button type="button" class="btn secondary" id="downloadBtn">下載 PNG</button>
-      </div>
-    </section>
-  </div>
-
-  <p class="footer">Powered by HTML5 Canvas · 無需安裝 · 資料不離開你的瀏覽器</p>
+<div class="topbar">
+  <button class="back" id="backBtn">‹</button>
+  <h1 id="title">韓鮮生 公關名單</h1>
+  <span class="dot" id="dot" title="同步狀態"></span>
+  <button class="gear" id="gearBtn">⚙</button>
 </div>
 
-<canvas id="preview" width="1080" height="1080" style="display:none"></canvas>
+<!-- 工具列 -->
+<div class="tools" id="tools">
+  <input class="search" id="search" placeholder="搜尋 帳戶名 / IG">
+  <div class="filters">
+    <select id="fType"><option value="">全部類型</option><option value="食記">食記</option><option value="料理">料理</option></select>
+    <select id="fStatus">
+      <option value="">全部狀態</option>
+      <option value="toContact">待聯繫</option>
+      <option value="sent">已邀約</option>
+      <option value="willing">願意合作</option>
+      <option value="shipped">已出貨</option>
+      <option value="posted">已發文</option>
+    </select>
+    <select id="fSort"><option value="">預設排序</option><option value="fansDesc">粉絲多→少</option><option value="fansAsc">粉絲少→多</option></select>
+  </div>
+  <div class="count" id="count"></div>
+</div>
+
+<!-- 清單 -->
+<div class="list" id="list"></div>
+
+<!-- 詳細頁 -->
+<div class="detail" id="detail"></div>
+
+<!-- 設定 -->
+<div class="screen" id="settings">
+  <h2>設定</h2>
+  <p>貼上 Google Apps Script 部署後的網頁應用程式網址（結尾是 <b>/exec</b>）。設定會存在這支手機，不會外流。</p>
+  <input id="gasInput" placeholder="https://script.google.com/macros/s/XXXX/exec" autocapitalize="off" autocomplete="off" spellcheck="false">
+  <button class="primary" id="saveGas">儲存並載入名單</button>
+  <button class="ghost" id="reloadBtn">重新整理名單</button>
+  <p id="gasInfo" style="margin-top:14px"></p>
+</div>
+
+<!-- 首次 / 空狀態 -->
+<div class="screen" id="welcome">
+  <div class="empty">
+    <div style="font-size:40px">📋</div>
+    <h2>還沒設定資料來源</h2>
+    <p>請先點右上角 ⚙ 設定，貼上 Apps Script 的 /exec 網址。</p>
+    <button class="primary" id="goSetup" style="margin-top:14px">前往設定</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
 
 <script>
-const THEMES = {
-  sunset: { bgTop: '#fff3e5', bgBottom: '#ffc9ad', primary: '#e84a4a', accent: '#ffc13c', textDark: '#281e1e', textLight: '#ffffff', textMuted: '#786e6e' },
-  ocean:  { bgTop: '#e8f5fd', bgBottom: '#a8d8ea', primary: '#1b75bc', accent: '#ffb446', textDark: '#14283c', textLight: '#ffffff', textMuted: '#64788c' },
-  mono:   { bgTop: '#f5f5f5', bgBottom: '#dcdcdc', primary: '#1e1e1e', accent: '#ff5a3c', textDark: '#1e1e1e', textLight: '#ffffff', textMuted: '#828282' },
+/* ====== 信件範本（複製給其他客戶時改這裡） ====== */
+var MAIL_SUBJECT = '韓鮮生 × {name} 互惠合作邀請';
+function mailBody(name){
+  return [
+    '親愛的 ' + (name || '創作者') + ' 您好：',
+    '',
+    '我們是韓鮮生，主打韓式即食／生鮮的品牌。一直有在關注您的內容，很喜歡您的分享風格，誠摯邀請您體驗我們的產品並協助分享。',
+    '',
+    '【合作方式】互惠（提供產品，不另計費用）',
+    '【提供內容】韓鮮生人氣商品乙組',
+    '【希望露出】IG 限時動態 + 一篇貼文／或您擅長的形式皆可',
+    '',
+    '若您有興趣，再麻煩回覆方便收件的「收件人 / 電話 / 地址 / 口味偏好」，我們會盡快安排寄出。',
+    '期待與您合作！',
+    '',
+    '韓鮮生 公關團隊 敬上'
+  ].join('\n');
+}
+
+/* ====== 欄位名稱（對應試算表標題，可調欄序，不要寫死欄號） ====== */
+var F = {
+  id:'序', type:'類型', name:'帳戶名', igHandle:'IG帳號', igLink:'IG連結',
+  followers:'粉絲數2025/11', fb:'FB連結', blog:'Blog 連結', yt:'YT連結',
+  otherContact:'其它聯繫方式', mail:'mail or others', window:'窗口', target:'邀約目標',
+  sent:'已發送邀約', inviteDate:'邀約日', cooperation:'合作方式', note:'備註',
+  willing:'願意合作', flavor:'口味選擇', recipient:'收件人', address:'地址', phone:'電話',
+  shipped:'品方已出貨', notified:'公關已通知', postTime:'po文時間', postContent:'po文內容',
+  adPermission:'已邀請廣告合作權限', adPermNote:'廣告合作權限備註', adDate:'已投放廣告日期',
+  toContact:'要聯繫'
 };
+var WILLING_OPTS = ['願意','考慮中','婉拒'];
 
-const FONT = "'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', 'Heiti TC', sans-serif";
+/* ====== 狀態 ====== */
+var GAS_KEY='hss_gas_url', CACHE_KEY='hss_cache', QUEUE_KEY='hss_queue';
+var DATA=[], CURRENT=null, GAS_URL=localStorage.getItem(GAS_KEY)||'';
 
-// ---------- Canvas helpers ----------
-function roundRect(ctx, x, y, w, h, r) {
-  r = Math.min(r, w / 2, h / 2);
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
-  ctx.closePath();
+/* ====== 工具 ====== */
+var $=function(s){return document.querySelector(s)};
+function todayStr(){var d=new Date(),p=function(n){return(n<10?'0':'')+n};return d.getFullYear()+'/'+p(d.getMonth()+1)+'/'+p(d.getDate());}
+function isTrue(v){return v===true||v==='TRUE'||v==='true'||v==='是'||v==='V'||v==='v'||v==='✓'||v===1;}
+function isFilled(v){return v!==undefined&&v!==null&&String(v).trim()!=='';}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function setDot(cls){$('#dot').className='dot '+(cls||'');}
+function toast(msg){var t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(function(){t.classList.remove('show')},1800);}
+function rowId(r){return r[F.id];}
+
+function progressOf(r){
+  return [
+    {key:'toContact',lbl:'要',done:isTrue(r[F.toContact])},
+    {key:'sent',lbl:'邀約',done:isTrue(r[F.sent])},
+    {key:'willing',lbl:'願意',done:r[F.willing]==='願意'},
+    {key:'shipped',lbl:'出貨',done:isFilled(r[F.shipped])},
+    {key:'notified',lbl:'通知',done:isFilled(r[F.notified])},
+    {key:'posted',lbl:'發文',done:isFilled(r[F.postTime])}
+  ];
 }
-function wrapText(ctx, text, maxWidth) {
-  const lines = []; let cur = '';
-  for (const ch of text) {
-    const probe = cur + ch;
-    if (ctx.measureText(probe).width <= maxWidth) cur = probe;
-    else { if (cur) lines.push(cur); cur = ch; }
+
+/* ====== 載入 / 快取 ====== */
+function loadCache(){try{var c=JSON.parse(localStorage.getItem(CACHE_KEY));if(c&&c.rows){DATA=c.rows;return true;}}catch(e){}return false;}
+function saveCache(){localStorage.setItem(CACHE_KEY,JSON.stringify({rows:DATA,ts:Date.now()}));}
+
+async function fetchData(){
+  if(!GAS_URL){showWelcome();return;}
+  setDot('saving');
+  try{
+    var res=await fetch(GAS_URL,{method:'GET'});
+    var j=await res.json();
+    if(!j.ok) throw new Error(j.error||'後端回傳錯誤');
+    DATA=j.rows; saveCache(); setDot('synced');
+    flushQueue();
+    renderList();
+  }catch(e){
+    setDot('offline');
+    if(loadCache()){renderList();toast('離線：顯示本機快取');}
+    else{toast('無法載入：'+e.message);}
   }
-  if (cur) lines.push(cur);
-  return lines;
-}
-function drawGradient(ctx, w, h, top, bottom) {
-  const g = ctx.createLinearGradient(0, 0, 0, h);
-  g.addColorStop(0, top); g.addColorStop(1, bottom);
-  ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
-}
-function drawCard(ctx, x, y, w, h, radius) {
-  ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.15)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 12;
-  roundRect(ctx, x, y, w, h, radius);
-  ctx.fillStyle = '#fff'; ctx.fill();
-  ctx.restore();
-}
-function drawFittedImage(ctx, img, bx, by, bw, bh, scaleFactor = 0.92) {
-  const scale = Math.min(bw / img.naturalWidth, bh / img.naturalHeight) * scaleFactor;
-  const iw = img.naturalWidth * scale, ih = img.naturalHeight * scale;
-  ctx.drawImage(img, bx + (bw - iw) / 2, by + (bh - ih) / 2, iw, ih);
 }
 
-// ---------- Layout: square 1080x1080 ----------
-function renderSquare(canvas, product, copy) {
-  const W = 1080, H = 1080;
-  canvas.width = W; canvas.height = H;
-  const ctx = canvas.getContext('2d');
-  const C = THEMES[product.theme];
-  const pad = 60;
+/* ====== 寫回（樂觀更新 + 佇列） ====== */
+function loadQueue(){try{return JSON.parse(localStorage.getItem(QUEUE_KEY))||[];}catch(e){return[];}}
+function saveQueue(q){localStorage.setItem(QUEUE_KEY,JSON.stringify(q));}
 
-  drawGradient(ctx, W, H, C.bgTop, C.bgBottom);
-
-  const cardW = W - pad * 2, cardH = 560;
-  drawCard(ctx, pad, pad, cardW, cardH, 40);
-  if (product.image) {
-    drawFittedImage(ctx, product.image, pad, pad, cardW, cardH);
-  } else {
-    ctx.fillStyle = C.textMuted;
-    ctx.font = `500 60px ${FONT}`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(product.name || '商品', pad + cardW / 2, pad + cardH / 2);
+async function pushUpdate(id,updates){
+  // 1) 樂觀更新本機
+  var row=DATA.filter(function(r){return String(rowId(r))===String(id)})[0];
+  if(row){for(var k in updates){row[k]=updates[k];}}
+  saveCache(); renderDetailLive(); renderList();
+  // 2) 送出
+  setDot('saving');
+  var payload={};payload[F.id]=id;payload.updates=updates;
+  try{
+    var res=await fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
+    var j=await res.json();
+    if(!j.ok) throw new Error(j.error||'寫回失敗');
+    setDot('synced');
+  }catch(e){
+    setDot('offline');
+    var q=loadQueue();q.push({id:id,updates:updates,ts:Date.now()});saveQueue(q);
+    toast('離線：已暫存，連線後自動補送');
   }
+}
 
-  ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-  let y = pad + cardH + 40;
-  ctx.fillStyle = C.textDark;
-  ctx.font = `700 62px ${FONT}`;
-  const nameLines = wrapText(ctx, product.name || '', W - pad * 2);
-  for (const line of nameLines.slice(0, 2)) { ctx.fillText(line, pad, y); y += 76; }
+async function flushQueue(){
+  var q=loadQueue();if(!q.length)return;
+  var rest=[];
+  for(var i=0;i<q.length;i++){
+    var item=q[i];
+    try{
+      var payload={};payload[F.id]=item.id;payload.updates=item.updates;
+      var res=await fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
+      var j=await res.json(); if(!j.ok) throw 0;
+    }catch(e){rest.push(item);}
+  }
+  saveQueue(rest);
+  if(q.length&&!rest.length) toast('已補送 '+q.length+' 筆離線變更');
+}
 
-  if (copy.tagline) {
-    y += 6;
-    ctx.fillStyle = C.primary;
-    ctx.font = `500 36px ${FONT}`;
-    for (const line of wrapText(ctx, copy.tagline, W - pad * 2).slice(0, 1)) {
-      ctx.fillText(line, pad, y); y += 48;
+/* ====== 清單渲染 ====== */
+function renderList(){
+  if(!GAS_URL){showWelcome();return;}
+  $('#welcome').classList.remove('show');$('#settings').classList.remove('show');
+  $('#tools').classList.remove('hide');$('#list').classList.remove('hide');
+  $('#detail').classList.remove('show');
+  var q=$('#search').value.trim().toLowerCase();
+  var ft=$('#fType').value, fs=$('#fStatus').value, sort=$('#fSort').value;
+  var rows=DATA.filter(function(r){
+    if(q){var hay=((r[F.name]||'')+' '+(r[F.igHandle]||'')+' '+(r[F.igLink]||'')).toLowerCase();if(hay.indexOf(q)<0)return false;}
+    if(ft&&String(r[F.type]).indexOf(ft)<0)return false;
+    if(fs){
+      if(fs==='toContact'&&!isTrue(r[F.toContact]))return false;
+      if(fs==='sent'&&!isTrue(r[F.sent]))return false;
+      if(fs==='willing'&&r[F.willing]!=='願意')return false;
+      if(fs==='shipped'&&!isFilled(r[F.shipped]))return false;
+      if(fs==='posted'&&!isFilled(r[F.postTime]))return false;
     }
-  }
-
-  const priceY = H - pad - 100;
-  if (product.discountPrice != null && product.price != null) {
-    ctx.fillStyle = C.primary;
-    ctx.font = `900 72px ${FONT}`;
-    const dText = `NT$ ${Math.round(product.discountPrice).toLocaleString()}`;
-    ctx.fillText(dText, pad, priceY + 28);
-    const dw = ctx.measureText(dText).width;
-
-    ctx.fillStyle = C.textMuted;
-    ctx.font = `500 36px ${FONT}`;
-    const oText = `NT$ ${Math.round(product.price).toLocaleString()}`;
-    const ox = pad + dw + 20, oy = priceY + 50;
-    ctx.fillText(oText, ox, oy);
-    const ow = ctx.measureText(oText).width;
-    ctx.strokeStyle = C.textMuted; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.moveTo(ox, oy + 24); ctx.lineTo(ox + ow, oy + 24); ctx.stroke();
-  } else if (product.price != null) {
-    ctx.fillStyle = C.primary;
-    ctx.font = `900 72px ${FONT}`;
-    ctx.fillText(`NT$ ${Math.round(product.price).toLocaleString()}`, pad, priceY + 28);
-  }
-
-  const ctaText = copy.cta || '立即購買';
-  ctx.font = `700 38px ${FONT}`;
-  const ctaTextW = ctx.measureText(ctaText).width;
-  const ctaW = ctaTextW + 70, ctaH = 76;
-  const ctaX = W - pad - ctaW, ctaY = H - pad - ctaH;
-  roundRect(ctx, ctaX, ctaY, ctaW, ctaH, ctaH / 2);
-  ctx.fillStyle = C.primary; ctx.fill();
-  ctx.fillStyle = C.textLight;
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(ctaText, ctaX + ctaW / 2, ctaY + ctaH / 2);
-  ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-
-  if (copy.badge) {
-    ctx.font = `700 30px ${FONT}`;
-    const bw = ctx.measureText(copy.badge).width + 36;
-    const bh = 54, bx = W - pad - bw, by = pad;
-    roundRect(ctx, bx, by, bw, bh, bh / 2);
-    ctx.fillStyle = C.accent; ctx.fill();
-    ctx.fillStyle = C.textDark;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(copy.badge, bx + bw / 2, by + bh / 2);
-    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-  }
-}
-
-// ---------- Layout: banner 1200x628 ----------
-function renderBanner(canvas, product, copy) {
-  const W = 1200, H = 628;
-  canvas.width = W; canvas.height = H;
-  const ctx = canvas.getContext('2d');
-  const C = THEMES[product.theme];
-  const pad = 50;
-
-  drawGradient(ctx, W, H, C.bgTop, C.bgBottom);
-
-  const imgW = 520, imgH = H - pad * 2;
-  drawCard(ctx, pad, pad, imgW, imgH, 32);
-  if (product.image) drawFittedImage(ctx, product.image, pad, pad, imgW, imgH);
-
-  const textX = pad + imgW + 50;
-  const textW = W - textX - pad;
-
-  ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-  let y = pad + 10;
-  ctx.fillStyle = C.textDark;
-  ctx.font = `700 54px ${FONT}`;
-  const nameLines = wrapText(ctx, product.name || '', textW);
-  for (const line of nameLines.slice(0, 2)) { ctx.fillText(line, textX, y); y += 66; }
-
-  if (copy.tagline) {
-    y += 4;
-    ctx.fillStyle = C.primary;
-    ctx.font = `500 30px ${FONT}`;
-    for (const line of wrapText(ctx, copy.tagline, textW).slice(0, 2)) {
-      ctx.fillText(line, textX, y); y += 40;
-    }
-  }
-
-  y += 8;
-  ctx.font = `400 26px ${FONT}`;
-  for (const hl of (copy.highlights || []).slice(0, 3)) {
-    ctx.fillStyle = C.primary;
-    ctx.beginPath(); ctx.arc(textX + 6, y + 18, 6, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = C.textDark;
-    ctx.fillText(hl, textX + 24, y);
-    y += 40;
-  }
-
-  const priceY = H - pad - 90;
-  ctx.fillStyle = C.primary;
-  ctx.font = `900 56px ${FONT}`;
-  if (product.discountPrice != null) {
-    ctx.fillText(`NT$ ${Math.round(product.discountPrice).toLocaleString()}`, textX, priceY);
-  } else if (product.price != null) {
-    ctx.fillText(`NT$ ${Math.round(product.price).toLocaleString()}`, textX, priceY);
-  }
-
-  const ctaText = copy.cta || '立即購買';
-  ctx.font = `700 30px ${FONT}`;
-  const ctaTextW = ctx.measureText(ctaText).width;
-  const ctaW = ctaTextW + 60, ctaH = 62;
-  const ctaX = W - pad - ctaW, ctaY = H - pad - ctaH;
-  roundRect(ctx, ctaX, ctaY, ctaW, ctaH, ctaH / 2);
-  ctx.fillStyle = C.primary; ctx.fill();
-  ctx.fillStyle = C.textLight;
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(ctaText, ctaX + ctaW / 2, ctaY + ctaH / 2);
-  ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-}
-
-// ---------- Claude API (optional, browser-side) ----------
-const CLAUDE_SYSTEM_PROMPT = `你是資深電商文案專家，擅長撰寫繁體中文的社群促銷文案。
-根據用戶提供的商品資訊 (JSON)，產出吸睛、簡短、有行動力的文案。
-請嚴格輸出以下 JSON（不要加 markdown、不要任何解釋）：
-{
-  "tagline": "一句吸睛主打標語，最多 18 個全形字",
-  "highlights": ["亮點1", "亮點2", "亮點3"],
-  "cta": "行動呼籲文字，最多 6 個全形字",
-  "badge": "角落徽章文字，最多 5 個全形字，或 null"
-}
-規則：
-- highlights 列出 3 個商品賣點，每項最多 10 個全形字
-- 若商品有折扣價，badge 請放「限時特惠」「熱銷中」等；無折扣則為 null
-- 文案避免浮誇空話，聚焦商品實際特色`;
-
-async function callClaude(apiKey, product, model = 'claude-haiku-4-5-20251001') {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: 600,
-      system: CLAUDE_SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: JSON.stringify(product, null, 2) }],
-    }),
+    return true;
   });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Claude API ${res.status}: ${err.slice(0, 200)}`);
-  }
-  const data = await res.json();
-  const text = (data.content?.[0]?.text || '').trim();
-  const start = text.indexOf('{'), end = text.lastIndexOf('}');
-  if (start === -1 || end === -1) throw new Error('無法解析 Claude 回傳的 JSON');
-  return JSON.parse(text.slice(start, end + 1));
+  function fansNum(r){return parseInt(String(r[F.followers]||'').replace(/[^\d]/g,''),10)||0;}
+  if(sort==='fansDesc')rows.sort(function(a,b){return fansNum(b)-fansNum(a)});
+  if(sort==='fansAsc')rows.sort(function(a,b){return fansNum(a)-fansNum(b)});
+
+  $('#count').textContent='共 '+rows.length+' 筆'+(rows.length!==DATA.length?(' / 全部 '+DATA.length):'');
+  var html=rows.map(function(r){
+    var type=String(r[F.type]||'');var tcls=type.indexOf('食記')>=0?'食記':(type.indexOf('料理')>=0?'料理':'other');
+    var steps=progressOf(r).map(function(s){return '<div class="step '+(s.done?'done':'')+'"><div class="bar"></div><div class="lbl">'+s.lbl+'</div></div>';}).join('');
+    return '<div class="card" data-id="'+esc(rowId(r))+'">'+
+      '<div class="row1"><span class="tag '+tcls+'">'+esc(type||'—')+'</span>'+
+      '<span class="name">'+esc(r[F.name]||'(未命名)')+'</span>'+
+      '<span class="fans">'+esc(r[F.followers]||'')+'</span></div>'+
+      (r[F.igHandle]?'<div class="handle">@'+esc(String(r[F.igHandle]).replace(/^@/,''))+'</div>':'')+
+      '<div class="prog">'+steps+'</div></div>';
+  }).join('');
+  $('#list').innerHTML=html||'<div class="empty">沒有符合的對象</div>';
+  [].forEach.call(document.querySelectorAll('.card'),function(el){
+    el.addEventListener('click',function(){openDetail(el.getAttribute('data-id'))});
+  });
 }
 
-// ---------- Form <-> state ----------
-function readForm() {
-  const val = id => document.getElementById(id).value.trim();
-  const num = id => { const v = val(id); return v === '' ? null : Number(v); };
-  const highlights = val('highlights').split('\n').map(s => s.trim()).filter(Boolean);
-  return {
-    product: {
-      name: val('name'),
-      price: num('price'),
-      discountPrice: num('discountPrice'),
-      features: highlights,
-      theme: val('theme'),
-      image: window._productImage || null,
-    },
-    copy: {
-      tagline: val('tagline'),
-      highlights,
-      cta: val('cta') || '立即購買',
-      badge: val('badge') || null,
-    },
-    layout: val('layout'),
-  };
+/* ====== 詳細頁 ====== */
+function openDetail(id){
+  CURRENT=id;
+  $('#tools').classList.add('hide');$('#list').classList.add('hide');
+  $('#detail').classList.add('show');$('#backBtn').style.display='block';
+  renderDetail();
+  window.scrollTo(0,0);
 }
-function writeCopy(copy) {
-  document.getElementById('tagline').value = copy.tagline || '';
-  document.getElementById('highlights').value = (copy.highlights || []).join('\n');
-  document.getElementById('cta').value = copy.cta || '立即購買';
-  document.getElementById('badge').value = copy.badge || '';
+function closeDetail(){CURRENT=null;$('#backBtn').style.display='none';$('#detail').classList.remove('show');renderList();}
+
+function rowField(label,inputHtml){return '<div class="field"><label>'+esc(label)+'</label>'+inputHtml+'</div>';}
+
+function renderDetail(){
+  var r=DATA.filter(function(x){return String(rowId(x))===String(CURRENT)})[0];
+  if(!r){closeDetail();return;}
+  var type=String(r[F.type]||'');var tcls=type.indexOf('食記')>=0?'食記':(type.indexOf('料理')>=0?'料理':'other');
+  $('#title').textContent=r[F.name]||'詳細';
+
+  var links='';
+  if(r[F.igLink])links+='<a href="'+esc(r[F.igLink])+'" target="_blank">IG</a>';
+  if(r[F.fb])links+='<a href="'+esc(r[F.fb])+'" target="_blank">FB</a>';
+  if(r[F.blog])links+='<a href="'+esc(r[F.blog])+'" target="_blank">Blog</a>';
+  if(r[F.yt])links+='<a href="'+esc(r[F.yt])+'" target="_blank">YT</a>';
+
+  var mailTo=r[F.mail]||'';
+  var subj=encodeURIComponent(MAIL_SUBJECT.replace('{name}',r[F.name]||''));
+  var bodyEnc=encodeURIComponent(mailBody(r[F.name]||''));
+  var mailHref='mailto:'+encodeURIComponent(mailTo)+'?subject='+subj+'&body='+bodyEnc;
+
+  var willingSeg=WILLING_OPTS.map(function(o){
+    return '<button class="'+(r[F.willing]===o?'on':'')+'" data-willing="'+esc(o)+'">'+esc(o)+'</button>';
+  }).join('');
+
+  function toggle(label,field,kind){ // kind: 'bool' or 'date'
+    var on = kind==='date' ? isFilled(r[field]) : isTrue(r[field]);
+    var sub = kind==='date' && on ? '<div class="sub-date">'+esc(r[field])+'</div>' : '';
+    return '<div class="field"><div class="toggle"><span class="t-lbl">'+esc(label)+'</span>'+
+      '<label class="sw"><input type="checkbox" data-toggle="'+field+'" data-kind="'+kind+'" '+(on?'checked':'')+'>'+
+      '<span class="slot"></span><span class="knob"></span></label></div>'+sub+'</div>';
+  }
+  function txt(label,field,type){type=type||'text';
+    return rowField(label,'<input type="'+type+'" data-text="'+field+'" value="'+esc(r[field]||'')+'">');}
+  function area(label,field){return rowField(label,'<textarea data-text="'+field+'">'+esc(r[field]||'')+'</textarea>');}
+
+  $('#detail').innerHTML=
+    '<div class="dhead"><span class="tag '+tcls+'">'+esc(type||'—')+'</span><span class="name">'+esc(r[F.name]||'')+'</span></div>'+
+    (r[F.igHandle]?'<div class="handle" style="margin-bottom:8px">@'+esc(String(r[F.igHandle]).replace(/^@/,''))+' · '+esc(r[F.followers]||'')+'</div>':'')+
+    (links?'<div class="links">'+links+'</div>':'')+
+    (mailTo?'<a class="mailbtn" href="'+mailHref+'">✉️ 用 Email 邀約</a>':'<div class="field" style="background:#fff;border-radius:12px;border:1px solid var(--line);color:var(--muted);margin-bottom:14px">此筆沒有 Email（'+esc(F.mail)+'）</div>')+
+
+    '<div class="section"><h3>聯繫進度</h3>'+
+      toggle('要聯繫',F.toContact,'bool')+
+      toggle('已發送邀約',F.sent,'bool')+
+      txt('邀約日',F.inviteDate)+
+      rowField('願意合作','<div class="seg" id="willingSeg">'+willingSeg+'</div>')+
+      txt('合作方式',F.cooperation)+
+      area('備註',F.note)+
+    '</div>'+
+
+    '<div class="section"><h3>寄送資料</h3>'+
+      txt('口味選擇',F.flavor)+
+      txt('收件人',F.recipient)+
+      txt('電話',F.phone)+
+      area('地址',F.address)+
+      toggle('品方已出貨',F.shipped,'date')+
+      toggle('公關已通知',F.notified,'date')+
+    '</div>'+
+
+    '<div class="section"><h3>成效追蹤</h3>'+
+      txt('po文時間',F.postTime)+
+      area('po文內容',F.postContent)+
+      toggle('已邀請廣告合作權限',F.adPermission,'date')+
+      txt('廣告合作權限備註',F.adPermNote)+
+      txt('已投放廣告日期',F.adDate)+
+    '</div>';
+
+  bindDetail();
 }
 
-function setStatus(msg, kind = '') {
-  const el = document.getElementById('status');
-  el.textContent = msg || '';
-  el.className = 'status' + (kind ? ' ' + kind : '');
+function renderDetailLive(){ if(CURRENT!==null && $('#detail').classList.contains('show')) renderDetail(); }
+
+function bindDetail(){
+  // 開關
+  [].forEach.call(document.querySelectorAll('[data-toggle]'),function(el){
+    el.addEventListener('change',function(){
+      var field=el.getAttribute('data-toggle'),kind=el.getAttribute('data-kind');
+      var val = kind==='date' ? (el.checked?todayStr():'') : (el.checked?'TRUE':'FALSE');
+      var u={};u[field]=val;pushUpdate(CURRENT,u);
+    });
+  });
+  // 文字（離開焦點才送）
+  [].forEach.call(document.querySelectorAll('[data-text]'),function(el){
+    el.addEventListener('change',function(){
+      var field=el.getAttribute('data-text');var u={};u[field]=el.value;pushUpdate(CURRENT,u);
+    });
+  });
+  // 三段
+  [].forEach.call(document.querySelectorAll('#willingSeg button'),function(el){
+    el.addEventListener('click',function(){
+      var r=DATA.filter(function(x){return String(rowId(x))===String(CURRENT)})[0];
+      var v=el.getAttribute('data-willing');
+      if(r&&r[F.willing]===v)v=''; // 再點一次=取消
+      var u={};u[F.willing]=v;pushUpdate(CURRENT,u);
+    });
+  });
 }
 
-// ---------- Wire up UI ----------
-const canvas = document.getElementById('preview');
-const previewWrap = document.getElementById('previewWrap');
-const previewActions = document.getElementById('previewActions');
+/* ====== 設定 / 畫面切換 ====== */
+function showWelcome(){
+  $('#tools').classList.add('hide');$('#list').classList.add('hide');$('#detail').classList.remove('show');
+  $('#settings').classList.remove('show');$('#welcome').classList.add('show');
+}
+function showSettings(){
+  $('#tools').classList.add('hide');$('#list').classList.add('hide');$('#detail').classList.remove('show');
+  $('#welcome').classList.remove('show');$('#backBtn').style.display='block';
+  $('#gasInput').value=GAS_URL;
+  $('#gasInfo').innerHTML=GAS_URL?('目前來源：<br><span style="word-break:break-all;color:#555">'+esc(GAS_URL)+'</span>'):'尚未設定。';
+  $('#settings').classList.add('show');
+}
 
-document.getElementById('image').addEventListener('change', (e) => {
-  const f = e.target.files?.[0];
-  if (!f) { window._productImage = null; return; }
-  const reader = new FileReader();
-  reader.onload = () => {
-    const img = new Image();
-    img.onload = () => { window._productImage = img; setStatus('商品圖已載入', 'success'); };
-    img.onerror = () => setStatus('商品圖載入失敗', 'error');
-    img.src = reader.result;
-  };
-  reader.readAsDataURL(f);
+/* ====== 事件 ====== */
+$('#search').addEventListener('input',renderList);
+$('#fType').addEventListener('change',renderList);
+$('#fStatus').addEventListener('change',renderList);
+$('#fSort').addEventListener('change',renderList);
+$('#gearBtn').addEventListener('click',showSettings);
+$('#goSetup').addEventListener('click',showSettings);
+$('#backBtn').addEventListener('click',function(){
+  if($('#settings').classList.contains('show')){ $('#settings').classList.remove('show');$('#backBtn').style.display='none';$('#title').textContent='韓鮮生 公關名單';renderList(); }
+  else if(CURRENT!==null){ $('#title').textContent='韓鮮生 公關名單';closeDetail(); }
 });
-
-document.getElementById('renderBtn').addEventListener('click', async () => {
-  const { product, copy, layout } = readForm();
-  if (!product.name) { setStatus('請輸入商品名稱', 'error'); return; }
-  try {
-    await document.fonts.ready;
-    if (layout === 'banner') renderBanner(canvas, product, copy);
-    else renderSquare(canvas, product, copy);
-    previewWrap.innerHTML = '';
-    previewWrap.classList.remove('empty');
-    canvas.style.display = 'block';
-    canvas.style.maxWidth = '100%';
-    canvas.style.height = 'auto';
-    previewWrap.appendChild(canvas);
-    previewActions.style.display = 'flex';
-    setStatus('已產生 ' + layout + ' 版型圖片', 'success');
-  } catch (e) {
-    setStatus('產圖失敗：' + e.message, 'error');
-  }
+$('#saveGas').addEventListener('click',function(){
+  var v=$('#gasInput').value.trim();
+  if(!/^https:\/\/script\.google\.com\/.*\/exec$/.test(v)){ if(!confirm('網址看起來不像 /exec 結尾，仍要儲存嗎？'))return; }
+  GAS_URL=v;localStorage.setItem(GAS_KEY,v);
+  $('#settings').classList.remove('show');$('#backBtn').style.display='none';$('#title').textContent='韓鮮生 公關名單';
+  fetchData();
 });
+$('#reloadBtn').addEventListener('click',function(){fetchData();$('#settings').classList.remove('show');$('#backBtn').style.display='none';});
+window.addEventListener('online',function(){flushQueue();fetchData();});
 
-document.getElementById('downloadBtn').addEventListener('click', () => {
-  const a = document.createElement('a');
-  const layout = document.getElementById('layout').value;
-  a.download = `ecom_${layout}_${Date.now()}.png`;
-  a.href = canvas.toDataURL('image/png');
-  a.click();
-});
-
-document.getElementById('aiBtn').addEventListener('click', async () => {
-  const apiKey = document.getElementById('apiKey').value.trim();
-  if (!apiKey) { setStatus('請先輸入 Anthropic API Key', 'error'); return; }
-  const { product } = readForm();
-  if (!product.name) { setStatus('請先輸入商品名稱', 'error'); return; }
-  if (document.getElementById('rememberKey').checked) {
-    localStorage.setItem('anthropicApiKey', apiKey);
-  } else {
-    localStorage.removeItem('anthropicApiKey');
-  }
-  const aiBtn = document.getElementById('aiBtn');
-  aiBtn.disabled = true; aiBtn.textContent = '產生中…';
-  setStatus('呼叫 Claude API 中…');
-  try {
-    const payload = {
-      name: product.name,
-      price: product.price,
-      discount_price: product.discountPrice,
-      features: product.features,
-    };
-    const copy = await callClaude(apiKey, payload);
-    writeCopy(copy);
-    setStatus('AI 文案已填入表單', 'success');
-  } catch (e) {
-    setStatus('AI 失敗：' + e.message, 'error');
-  } finally {
-    aiBtn.disabled = false; aiBtn.textContent = '讓 Claude 幫我寫文案';
-  }
-});
-
-// Restore API key from localStorage
-(function init() {
-  const saved = localStorage.getItem('anthropicApiKey');
-  if (saved) {
-    document.getElementById('apiKey').value = saved;
-    document.getElementById('rememberKey').checked = true;
-  }
+/* ====== 啟動 ====== */
+(function init(){
+  if(loadCache())renderList();
+  if(GAS_URL)fetchData(); else showWelcome();
 })();
 </script>
 </body>

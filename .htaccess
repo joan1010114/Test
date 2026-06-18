@@ -1,0 +1,13 @@
+# 韓鮮生 公關名單 App — 靜態頁面設定
+# 解決 Cloudways 預設會去找 index.php 的問題：強制以 index.html 為首頁。
+DirectoryIndex index.html
+
+# 關閉目錄列表
+Options -Indexes
+
+# 簡單快取（HTML 不快取，避免改版後看到舊頁）
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+</IfModule>
